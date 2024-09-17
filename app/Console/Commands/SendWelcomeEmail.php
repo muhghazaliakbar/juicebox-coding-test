@@ -26,8 +26,6 @@ class SendWelcomeEmail extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle(): int
     {
@@ -36,22 +34,25 @@ class SendWelcomeEmail extends Command
         $email = $this->option('email');
 
         // Validate input: either id or email must be provided
-        if (!$userId && !$email) {
+        if (! $userId && ! $email) {
             $this->error('Please provide either --id or --email option.');
+
             return 1; // Non-zero exit code indicates failure
         }
 
         // Retrieve the user based on a provided option
         if ($userId) {
             $user = User::query()->find($userId);
-            if (!$user) {
+            if (! $user) {
                 $this->error("No user found with ID {$userId}.");
+
                 return 1;
             }
         } else {
             $user = User::query()->where('email', $email)->first();
-            if (!$user) {
+            if (! $user) {
                 $this->error("No user found with email {$email}.");
+
                 return 1;
             }
         }

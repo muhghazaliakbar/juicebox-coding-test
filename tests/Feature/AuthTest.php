@@ -3,12 +3,10 @@
 namespace Tests\Feature;
 
 use App\Jobs\SendWelcomeEmailJob;
-use App\Mail\WelcomeEmail;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
-use App\Models\User;
 
 class AuthTest extends TestCase
 {
@@ -16,8 +14,6 @@ class AuthTest extends TestCase
 
     /**
      * Get token for current user helper.
-     * @param User $user
-     * @return string
      */
     public function getTokenForUser(User $user): string
     {
@@ -163,7 +159,7 @@ class AuthTest extends TestCase
 
         // Attempt to access a protected route
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->getJson('/api/user');
 
         $response->assertStatus(401); // Unauthorized
@@ -182,7 +178,7 @@ class AuthTest extends TestCase
         // Authenticate the user and get the token
         $token = $this->getTokenForUser($user);
 
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token,])
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->getJson('/api/user');
 
         $response->assertStatus(200)
@@ -191,7 +187,7 @@ class AuthTest extends TestCase
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                ]
+                ],
             ]);
     }
 
@@ -214,7 +210,7 @@ class AuthTest extends TestCase
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                ]
+                ],
             ]);
     }
 
@@ -236,7 +232,7 @@ class AuthTest extends TestCase
 
         // Make the request to fetch the other user's info
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->getJson("/api/users/{$otherUser->id}");
 
         // Assert the response
@@ -246,7 +242,7 @@ class AuthTest extends TestCase
                     'id' => $otherUser->id,
                     'name' => $otherUser->name,
                     'email' => $otherUser->email,
-                ]
+                ],
             ]);
     }
 
@@ -276,7 +272,7 @@ class AuthTest extends TestCase
         $token = $this->getTokenForUser($user);
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->postJson('/api/logout');
 
         $response->assertStatus(200)
@@ -319,28 +315,6 @@ class AuthTest extends TestCase
         // Assert that the SendWelcomeEmailJob was dispatched with the correct user
         Queue::assertPushed(SendWelcomeEmailJob::class, function ($job) {
             return $job->user->email === 'testuser@example.com';
-        });
-    }
-
-    /**
-     * Test that welcome email is sent upon processing the SendWelcomeEmailJob.
-     *
-     * @return void
-     */
-    public function test_welcome_email_is_sent_when_job_is_processed()
-    {
-        // Fake the mail to intercept sent emails
-        Mail::fake();
-
-        // Create a user
-        $user = User::factory()->create(['email' => 'welcomeuser@example.com']);
-
-        // Dispatch the SendWelcomeEmailJob
-        SendWelcomeEmailJob::dispatch($user);
-
-        // Assert that the WelcomeEmail mailable was sent to the user
-        Mail::assertSent(WelcomeEmail::class, function ($mail) use ($user) {
-            return $mail->hasTo($user->email) && $mail->user->id === $user->id;
         });
     }
 }

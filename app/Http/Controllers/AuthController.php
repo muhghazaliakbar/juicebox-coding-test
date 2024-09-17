@@ -6,10 +6,10 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Jobs\SendWelcomeEmailJob;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -38,6 +38,7 @@ class AuthController extends Controller
 
     /**
      * Login user and create token
+     *
      * @throws ValidationException
      */
     public function login(LoginRequest $request): JsonResponse
@@ -66,7 +67,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Successfully logged out'
+            'message' => 'Successfully logged out',
         ]);
     }
 
@@ -78,7 +79,7 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'Successfully logged out from all devices'
+            'message' => 'Successfully logged out from all devices',
         ]);
     }
 

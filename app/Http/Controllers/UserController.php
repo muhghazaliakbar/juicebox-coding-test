@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\JsonResponse;
+use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
     /**
      * Display the specified user.
-     *
-     * @param int $id
-     * @return UserResource|JsonResponse
      */
     public function show(int $id): UserResource|JsonResponse
     {
@@ -25,7 +22,7 @@ class UserController extends Controller
             return new UserResource($user);
         } catch (ModelNotFoundException $e) {
             return response()->json([
-                'message' => 'User not found.'
+                'message' => 'User not found.',
             ], 404);
         }
     }

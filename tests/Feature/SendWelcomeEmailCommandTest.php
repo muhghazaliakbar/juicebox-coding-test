@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use App\Jobs\SendWelcomeEmailJob;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
-use App\Models\User;
 
 class SendWelcomeEmailCommandTest extends TestCase
 {
