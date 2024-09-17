@@ -17,3 +17,7 @@ This repo is using the latest Laravel version, so it will also need to follow [L
 - Run the `seeder` first or create a new user using artisan `tinker` to create a new user before dispatching the job
 - Execute the welcome email job using: `php artisan send:welcome-email --id={user_id}` to send the email by User ID or `php artisan send:welcome-email --email={email}` to send the email by registered user email. Example: `php artisan send:welcome-email --email=test@example.com`
 - If the job is executed, the terminal response should be like this: `SendWelcomeEmailJob dispatched for user ID 1 (test@example.com).`
+
+### API Docs
+
+API documentation can be access on this route `{APP_URL}/docs`
