@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserResource;
+use App\Jobs\SendWelcomeEmailJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +24,9 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Dispatch the SendWelcomeEmailJob
+        SendWelcomeEmailJob::dispatch($user);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -80,8 +85,8 @@ class AuthController extends Controller
     /**
      * Get authenticated user
      */
-    public function user(Request $request): JsonResponse
+    public function user(Request $request): UserResource
     {
-        return response()->json($request->user());
+        return new UserResource($request->user());
     }
 }

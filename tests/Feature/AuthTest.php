@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\SendWelcomeEmailJob;
+use App\Mail\WelcomeEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 use App\Models\User;
 
@@ -183,10 +187,11 @@ class AuthTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                // Add other fields if necessary
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ]
             ]);
     }
 
@@ -205,9 +210,11 @@ class AuthTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ]
             ]);
     }
 
@@ -235,9 +242,11 @@ class AuthTest extends TestCase
         // Assert the response
         $response->assertStatus(200)
             ->assertJson([
-                'id' => $otherUser->id,
-                'name' => $otherUser->name,
-                'email' => $otherUser->email,
+                'data' => [
+                    'id' => $otherUser->id,
+                    'name' => $otherUser->name,
+                    'email' => $otherUser->email,
+                ]
             ]);
     }
 
@@ -280,5 +289,58 @@ class AuthTest extends TestCase
 
         // Ensure the token is revoked
         $this->assertCount(0, $user->tokens);
+    }
+
+    /**
+     * Test that SendWelcomeEmailJob is dispatched upon registration.
+     *
+     * @return void
+     */
+    public function test_send_welcome_email_job_is_dispatched_upon_registration()
+    {
+        // Fake the queue to intercept dispatched jobs
+        Queue::fake();
+
+        // Make the registration request
+        $response = $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'email' => 'testuser@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        // Assert successful registration
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'access_token',
+                'token_type',
+            ]);
+
+        // Assert that the SendWelcomeEmailJob was dispatched with the correct user
+        Queue::assertPushed(SendWelcomeEmailJob::class, function ($job) {
+            return $job->user->email === 'testuser@example.com';
+        });
+    }
+
+    /**
+     * Test that welcome email is sent upon processing the SendWelcomeEmailJob.
+     *
+     * @return void
+     */
+    public function test_welcome_email_is_sent_when_job_is_processed()
+    {
+        // Fake the mail to intercept sent emails
+        Mail::fake();
+
+        // Create a user
+        $user = User::factory()->create(['email' => 'welcomeuser@example.com']);
+
+        // Dispatch the SendWelcomeEmailJob
+        SendWelcomeEmailJob::dispatch($user);
+
+        // Assert that the WelcomeEmail mailable was sent to the user
+        Mail::assertSent(WelcomeEmail::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email) && $mail->user->id === $user->id;
+        });
     }
 }
